@@ -90,102 +90,112 @@ namespace DirectoryComparer
 
             return relativeUri.OriginalString;
         }
-        static int Main(string[] args){
-            if (args.Length < 2)
+        static int Main(string[] args)
+        {
+            try
             {
-                Console.WriteLine("Usage: DirectoryComparer <dir1> <dir2>");
-                return 1;
-            }
-
-            var leftDir = args[0];
-            var rightDir = args[1];
-
-            if (!Directory.Exists(leftDir))
-            {
-                Console.WriteLine("Left directory doesn't exist: " + leftDir);
-                return 1;
-            }
-
-            if (!Directory.Exists(rightDir))
-            {
-                Console.WriteLine("Right directory doesn't exist: " + rightDir);
-                return 1;
-            }
-
-            Console.WriteLine("Comparing directories:");
-            Console.WriteLine("    " + leftDir);
-            Console.WriteLine("    " + rightDir);
-
-            var leftOnlyFiles = new List<string>();
-            var differentFiles = new List<string>();
-            var rightOnlyFiles = new List<string>();
-
-            var leftFiles = 0;
-
-            foreach (var leftPath in AllFiles(leftDir).AsParallel())
-            {
-                ++leftFiles;
-
-                var relativePath = MakePathRelative(leftDir, leftPath);
-                var rightPath = Path.Combine(rightDir, relativePath);
-
-                if (!File.Exists(rightPath))
+                if (args.Length < 2)
                 {
-                    leftOnlyFiles.Add(relativePath);
+                    Console.WriteLine("Usage: DirectoryComparer <dir1> <dir2>");
+                    return 1;
                 }
-                else
+
+                var leftDir = args[0];
+                var rightDir = args[1];
+
+                if (!Directory.Exists(leftDir))
                 {
-                    if (!FileCompare(leftPath, rightPath))
+                    Console.WriteLine("Left directory doesn't exist: " + leftDir);
+                    return 1;
+                }
+
+                if (!Directory.Exists(rightDir))
+                {
+                    Console.WriteLine("Right directory doesn't exist: " + rightDir);
+                    return 1;
+                }
+
+                Console.WriteLine("Comparing directories:");
+                Console.WriteLine("    " + leftDir);
+                Console.WriteLine("    " + rightDir);
+
+                var leftOnlyFiles = new List<string>();
+                var differentFiles = new List<string>();
+                var rightOnlyFiles = new List<string>();
+
+                var leftFiles = 0;
+
+                foreach (var leftPath in AllFiles(leftDir).AsParallel())
+                {
+                    ++leftFiles;
+
+                    var relativePath = MakePathRelative(leftDir, leftPath);
+                    var rightPath = Path.Combine(rightDir, relativePath);
+
+                    if (!File.Exists(rightPath))
                     {
-                        differentFiles.Add(relativePath);
-                    }                    
+                        leftOnlyFiles.Add(relativePath);
+                    }
+                    else
+                    {
+                        if (!FileCompare(leftPath, rightPath))
+                        {
+                            differentFiles.Add(relativePath);
+                        }
+                    }
                 }
-            }
 
-            var rightFiles = 0;
+                var rightFiles = 0;
 
-            foreach (var rightPath in AllFiles(rightDir).AsParallel())
-            {
-                ++rightFiles;
-
-                var relativePath = MakePathRelative(rightDir, rightPath);
-                var leftPath = Path.Combine(leftDir, relativePath);
-
-                if (!File.Exists(leftPath))
+                foreach (var rightPath in AllFiles(rightDir).AsParallel())
                 {
-                    rightOnlyFiles.Add(relativePath);
+                    ++rightFiles;
+
+                    var relativePath = MakePathRelative(rightDir, rightPath);
+                    var leftPath = Path.Combine(leftDir, relativePath);
+
+                    if (!File.Exists(leftPath))
+                    {
+                        rightOnlyFiles.Add(relativePath);
+                    }
                 }
+
+                Console.WriteLine("== Summary == ");
+                Console.WriteLine("Total left files: " + leftFiles);
+                Console.WriteLine("Total right files: " + rightFiles);
+                Console.WriteLine("Left only: " + leftOnlyFiles.Count);
+                Console.WriteLine("Different: " + differentFiles.Count);
+                Console.WriteLine("Right only: " + rightOnlyFiles.Count);
+
+                Console.WriteLine("== Left only == ");
+
+                foreach (var file in leftOnlyFiles)
+                {
+                    Console.WriteLine(file);
+                }
+
+                Console.WriteLine("== Different == ");
+
+                foreach (var file in differentFiles)
+                {
+                    Console.WriteLine("    " + file);
+                }
+
+                Console.WriteLine("== Right only == ");
+
+                foreach (var file in rightOnlyFiles)
+                {
+                    Console.WriteLine(file);
+                }
+
+                return 0;
             }
-
-            Console.WriteLine("== Summary == ");
-            Console.WriteLine("Total left files: " + leftFiles);
-            Console.WriteLine("Total right files: " + rightFiles);
-            Console.WriteLine("Left only: " + leftOnlyFiles.Count);
-            Console.WriteLine("Different: " + differentFiles.Count);
-            Console.WriteLine("Right only: " + rightOnlyFiles.Count);
-
-            Console.WriteLine("== Left only == ");
-
-            foreach (var file in leftOnlyFiles)
+            catch (Exception ex)
             {
-                Console.WriteLine(file);
+                Console.Write("An exception terminated the program.");
+                Console.Write(ex.ToString());
+                return 1;
             }
-
-            Console.WriteLine("== Different == ");
-
-            foreach (var file in differentFiles)
-            {
-                Console.WriteLine("    " + file);
-            }
-
-            Console.WriteLine("== Right only == ");
-
-            foreach (var file in rightOnlyFiles)
-            {
-                Console.WriteLine(file);
-            }
-
-            return 0;
         }
     }
 }
