@@ -81,8 +81,16 @@ namespace DirectoryComparer
             }
         }
 
-        static int Main(string[] args)
+        // http://www.pinvoke.net/default.aspx/shlwapi.pathrelativepathto
+        public static string MakePathRelative(string rootPath, string fullPath)
         {
+            Uri uri1 = new Uri(rootPath);
+            Uri uri2 = new Uri(fullPath);
+            Uri relativeUri = uri1.MakeRelativeUri(uri2);
+
+            return relativeUri.OriginalString;
+        }
+        static int Main(string[] args){
             if (args.Length < 2)
             {
                 Console.WriteLine("Usage: DirectoryComparer <dir1> <dir2>");
@@ -118,7 +126,7 @@ namespace DirectoryComparer
             {
                 ++leftFiles;
 
-                var relativePath = leftPath.Substring(leftDir.Length+1);
+                var relativePath = MakePathRelative(leftDir, leftPath);
                 var rightPath = Path.Combine(rightDir, relativePath);
 
                 if (!File.Exists(rightPath))
@@ -140,7 +148,7 @@ namespace DirectoryComparer
             {
                 ++rightFiles;
 
-                var relativePath = rightPath.Substring(rightDir.Length + 1);
+                var relativePath = MakePathRelative(rightDir, rightPath);
                 var leftPath = Path.Combine(leftDir, relativePath);
 
                 if (!File.Exists(leftPath))
