@@ -84,12 +84,20 @@ namespace DirectoryComparer
         // http://www.pinvoke.net/default.aspx/shlwapi.pathrelativepathto
         public static string MakePathRelative(string rootPath, string fullPath)
         {
-            Uri uri1 = new Uri(rootPath);
-            Uri uri2 = new Uri(fullPath);
-            Uri relativeUri = uri1.MakeRelativeUri(uri2);
+            if (!fullPath.ToLower().Contains(rootPath.ToLower()))
+            {
+                throw new ApplicationException("Can't make relative path from '" + fullPath + "' and '" + rootPath + "'");
+            }
 
-            return relativeUri.OriginalString;
+            var relPath = fullPath.Substring(rootPath.Length);
+            if (relPath[0] == '\\')
+            {
+                relPath = relPath.Substring(1);
+            }
+
+            return relPath;
         }
+
         static int Main(string[] args)
         {
             try
